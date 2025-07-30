@@ -1,10 +1,14 @@
 import { test, expect } from '@playwright/test';
+const url = 'https://automationexercise.com/';
+const userName = 'TestUser';
+const email = 'playtestuser@email.com';
+const password = 'P@ss1234';
 
 //Test Case 1
-test('Register User', async ( { page }) => {
-    const userName = 'TestUser5';
-    const email = 'playtestuser5@email.com';
-    await page.goto('https://automationexercise.com/');
+test('Register User', async ({ page }) => {
+    //const userName = 'TestUser6';
+    //const email = 'playtestuser6@email.com';
+    await page.goto(url);
     //Verify page is loaded
     await expect(page.locator('img[src="/static/images/home/logo.png"]')).toBeVisible();
     //Click Signup/Login button
@@ -17,9 +21,10 @@ test('Register User', async ( { page }) => {
     await page.getByRole('button', {name: 'Signup'}).click();
     await expect(page.getByText('Enter Account Information')).toBeVisible();
     await page.locator('.top').nth(1).check();
-    //const actualName = page.locator('#name').textContent();
-    //console.log(actualName)
-    //expect(actualName).toBe(userName);
+    const actualName = await page.locator('#name').inputValue();
+    const actualEmail = await page.locator('#email').inputValue();
+    expect(actualName).toEqual(userName);
+    expect(actualEmail).toEqual(email);
     await page.locator('#password').fill('P@ss1234');
     await page.locator('#days').selectOption('10');
     await page.locator('#months').selectOption('7');
@@ -46,7 +51,50 @@ test('Register User', async ( { page }) => {
     await expect(page.locator('h2 b')).toBeVisible();
     await page.locator('.btn.btn-primary').click();
 
-    //await page.pause();
+});
+
+//Test Case 2
+test('Valid Login', async ({ page }) => {
+    await page.goto(url);
+    await expect(page.locator('img[src="/static/images/home/logo.png"]')).toBeVisible();
+    await page.getByRole('link', {name: ' Signup / Login'}).click();
+    await expect(page.locator('.login-form h2')).toBeVisible();
+    //there are 3 email elements on the page. the filter helps to specify the one by using it's text
+    await page.locator('form').filter({ hasText: 'Login' }).getByPlaceholder('Email Address').fill(email);
+    await page.getByPlaceholder('Password').fill(password);
+    await page.getByRole('button', {name:'Login'}).click();
+    await expect(page.getByText('Logged in as ' + userName)).toBeVisible();
+    await page.getByRole('link', {name: 'Delete Account'}).click();
+    await expect(page.locator('h2 b')).toBeVisible();
+    await page.locator('.btn.btn-primary').click();
+
+});
+
+//Test Case 3
+test('Invalid Login', async ({ page }) => {
+    await page.goto(url);
+    await expect(page.locator('img[src="/static/images/home/logo.png"]')).toBeVisible();
+    await page.getByRole('link', {name: ' Signup / Login'}).click();
+    await expect(page.locator('.login-form h2')).toBeVisible();
+    await page.locator('form').filter({ hasText: 'Login' }).getByPlaceholder('Email Address').fill(email);
+    await page.getByPlaceholder('Password').fill('P@s1234');
+    await page.getByRole('button', {name:'Login'}).click();
+    await expect(page.getByText('Your email or password is incorrect!')).toBeVisible();
+
+});
+
+//Test Case 4
+test('Logout User', async ({ page }) => {
+    await page.goto(url);
+    await expect(page.locator('img[src="/static/images/home/logo.png"]')).toBeVisible();
+    await page.getByRole('link', {name: ' Signup / Login'}).click();
+    await expect(page.locator('.login-form h2')).toBeVisible();
+    await page.locator('form').filter({ hasText: 'Login' }).getByPlaceholder('Email Address').fill(email);
+    await page.getByPlaceholder('Password').fill(password);
+    await page.getByRole('button', {name:'Login'}).click();
+    await expect(page.getByText('Logged in as ' + userName)).toBeVisible();
+    await page.getByRole('link', {name:'Logout'}).click();
+    await expect(page).toHaveURL('https://automationexercise.com/login');
 
 
 
